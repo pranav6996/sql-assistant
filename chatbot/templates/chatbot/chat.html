@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for a polished look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Smooth fade-in for messages */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden font-sans">
+
+    <div class="w-1/4 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col shadow-sm z-20">
+        <h2 class="text-2xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
+            History
+        </h2>
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+            {% for chat in history %}
+            <div class="p-4 bg-slate-50 rounded-xl text-sm border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer truncate text-slate-600 font-medium">
+                {{ chat.user_question }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="w-1/4 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col shadow-sm z-20">
+        <h2 class="text-2xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
+            sql_query
+        </h2>
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+            <div class="p-4 bg-slate-50 rounded-xl text-sm border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer truncate text-slate-600 font-medium">
+                {{ sql_query }}
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col relative">
+        <header class="p-5 border-b border-slate-200 bg-white/80 backdrop-blur-md flex justify-between items-center absolute top-0 w-full z-10">
+            <h1 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                <span class="bg-indigo-100 text-indigo-600 p-2 rounded-xl text-sm">✨</span>
+                Data Agent
+            </h1>
+            <div class="text-xs font-bold px-4 py-2 bg-purple-100 text-purple-700 rounded-full shadow-sm">
+                Gemini 2.5 Flash
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 pt-28 pb-32 space-y-6" id="chat-window">
+            {% if response %}
+            <div class="flex justify-end fade-in">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-2xl rounded-tr-sm max-w-md shadow-md">
+                    <p class="font-medium">{{ last_question }}</p>
+                </div>
+            </div>
+
+            <div class="flex justify-start fade-in" style="animation-delay: 0.1s;">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl rounded-tl-sm max-w-3xl shadow-sm">
+                    <p class="text-slate-700 leading-relaxed text-[15px]">{{ response }}</p>
+                    
+                    {% if sql %}
+                    <div class="mt-5 p-4 bg-slate-800 rounded-xl font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
+                        <span class="text-slate-400 select-none text-[10px] uppercase tracking-wider font-bold mb-2 block">Generated SQL</span>
+                        {{ sql }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                <div class="text-6xl animate-bounce">👋</div>
+                <p class="text-lg font-medium text-slate-500">Ask me anything about your database...</p>
+            </div>
+            {% endif %}
+        </main>
+
+        <footer class="p-6 bg-white border-t border-slate-200 absolute bottom-0 w-full z-20">
+            <form method="POST" class="max-w-4xl mx-auto flex gap-3 relative">
+                {% csrf_token %}
+                <input 
+                    type="text" 
+                    name="message" 
+                    placeholder="e.g., Which artist has the most tracks?" 
+                    class="flex-1 bg-slate-50 border border-slate-300 rounded-full pl-6 pr-32 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-slate-700 placeholder-slate-400 shadow-sm text-[15px]"
+                    required
+                >
+                <button type="submit" class="absolute right-2 top-2 bottom-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-full font-bold transition-transform hover:scale-105 shadow-md">
+                    Ask
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-scroll to the bottom of the chat when a new message appears
+        const chatWindow = document.getElementById('chat-window');
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    </script>
+</body>
+</html>
